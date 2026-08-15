@@ -16,7 +16,6 @@ Graph::Graph(const std::string_view str_file_path) {
     std::tie(vertices_amount_, edges_amount_) = GetVerticesAndEdges(marker, col_file);
 
     adjacency_lists_.resize(vertices_amount_); // метод GetVerticesAndEdges возвращает истинное количество вершин реализации (т е +1)
-    is_vertex_active_.assign(vertices_amount_, 1); // (char)(true) == 1
     //list_of_edges_.reserve(edges_amount_);
     //degrees_.resize(vertices_amount_);
 

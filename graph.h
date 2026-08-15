@@ -29,7 +29,7 @@ public:
     }
 
     [[nodiscard]] double Density() const {
-        const int max_edges = 0.5*V()*(V()-1);
+        const int max_edges = static_cast<int>(0.5*V()*(V()-1));
         if (max_edges == 0) {
             return 0;
         }
@@ -70,13 +70,12 @@ public:
 
     void Represent(std::ostream& output = std::cout) const;
 
-    size_t size() const {
+    [[nodiscard]] size_t size() const {
         size_t total = 0;
 
         // 1. Память под сами объекты векторов (управляющие блоки)
         total += sizeof(adjacency_lists_);      // размер самого вектора (24 байта в 64-bit)
         total += sizeof(adjacency_matrix_);
-        total += sizeof(is_vertex_active_);
 
         // 2. Память под данные векторов
         // Для списков смежности: сумма capacity() * sizeof(int) для каждого вектора
@@ -87,9 +86,6 @@ public:
 
         // Для матрицы смежности
         total += adjacency_matrix_.capacity() * sizeof(char);
-
-        // Для is_vertex_active_
-        total += is_vertex_active_.capacity() * sizeof(char);
 
         // 3. Примитивные поля
         total += sizeof(vertices_amount_);
@@ -103,7 +99,6 @@ private:
     int edges_amount_{};
     std::vector<std::vector<int>> adjacency_lists_;
     std::vector<char> adjacency_matrix_;
-    std::vector<char> is_vertex_active_;
     static constexpr int MAX_VERTICES_ = 5001;
     static constexpr int MAX_EDGES_ = 50'000'000;
 
