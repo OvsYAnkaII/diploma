@@ -14,7 +14,7 @@ struct Coloring {
     std::chrono::duration<double> time{}; // время раскраски
     void Represent(std::ostream& out = std::cout) const {
         out << "colors: " << numColors << std::endl;
-        // out << "time: " << time.count() << std::endl;
+        out << "time: " << time.count() << std::endl;
     }
 };
 
@@ -88,4 +88,42 @@ namespace algorithms {
     //
     Coloring RLF(const Graph& graph);
 
+}
+
+namespace chrom_num_bounds {
+    inline int lower_bound_fraction(const Graph& graph) {
+        const double n = graph.V();
+        const double m = graph.E();
+        return  std::floor(n*n/(n*n-2*m));
+    }
+
+    inline int upper_bound_sqrt(const Graph& graph) {
+        const double m = graph.E();
+        return  std::ceil(1.0/2 + std::sqrt(2*m+1.0/4));
+    }
+
+    inline int upper_bound_degree(const Graph& graph) {
+        int max_degree = std::numeric_limits<int>::min();
+        for (int v = 1; v <= graph.V(); v++) {
+            max_degree = std::max(max_degree, graph.Degree(v));
+        }
+        return  max_degree+1;
+    }
+
+    inline int upper_bound_max_min(const Graph& graph) {
+        std::vector<int> degrees;
+        degrees.reserve(graph.V());
+        for (int v = 1; v <= graph.V(); v++) {
+            degrees.push_back(graph.Degree(v));
+        }
+        std::sort(degrees.begin(), degrees.end(), [](const int lhs, const int rhs){return lhs > rhs;});
+        int iterable_value = std::numeric_limits<int>::max();
+        int max_value = std::numeric_limits<int>::min();
+        for (int v_idx = 1; v_idx <= degrees.size(); v_idx++) {
+            const int vertex = v_idx-1;
+            iterable_value = std::min(degrees[vertex]+1, v_idx);
+            max_value = std::max(max_value, iterable_value);
+        }
+        return  max_value;
+    }
 }
