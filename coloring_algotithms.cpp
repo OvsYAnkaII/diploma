@@ -49,7 +49,7 @@ int CountConflicts(const Graph& graph, const std::vector<int>& color) {
     return conflicts;
 }
 
-/*Coloring ColorWithBFS(const Graph& graph, const int root) {
+inline Coloring ColorWithBFS(const Graph& graph, const int root) {
     Coloring colors(graph.V()+1);
     std::vector<bool> visited(graph.V(), false);
     int total_colours = -1;
@@ -59,7 +59,7 @@ int CountConflicts(const Graph& graph, const std::vector<int>& color) {
         const int current_vertex = vertices_to_color.front();
         vertices_to_color.pop();
         visited[current_vertex] = true;
-        if (colors.color[current_vertex] == -1) {
+        if (!Colored(colors.color[current_vertex])) {
             colors.color[current_vertex] = GetColour(colors.color, graph.AdjacentVertices(current_vertex));
         }
         total_colours = std::max(total_colours, colors.color[current_vertex]);
@@ -72,35 +72,10 @@ int CountConflicts(const Graph& graph, const std::vector<int>& color) {
     colors.numColors = total_colours;
 
     return colors;
-}*/
-
-Coloring ColorWithBFS(const Graph& graph, const int root) {
-    Coloring colors(graph.V() + 1);
-    std::vector<int> color(graph.V() + 1, -1);
-    std::vector<int> buffer;
-    buffer.reserve(graph.V() + 1);
-    buffer.push_back(root);
-    color[root] = GetColour(color, graph.AdjacentVertices(root));;  // сразу красим корень
-    int total_colours = 1;
-    for (size_t head = 1; head < graph.V()+1; ++head) {
-        const int current_vertex = buffer[head-1];
-
-        for (int adj_vertex : graph.AdjacentVertices(current_vertex)) {
-            if (color[adj_vertex] == -1) {
-                color[adj_vertex] = GetColour(color, graph.AdjacentVertices(adj_vertex));
-                total_colours = std::max(total_colours, color[adj_vertex]);
-                buffer.push_back(adj_vertex);
-            }
-        }
-    }
-
-    colors.color = std::move(color);
-    colors.numColors = total_colours + 1;
-    return colors;
 }
 
 Coloring ColorStraightForward(const std::vector<int>& ordered_vertexes, const Graph& graph){
-    Coloring colors(static_cast<int>(ordered_vertexes.size()));
+    Coloring colors(ordered_vertexes.size());
     int max_colours = -1;
     for (const auto vertex: ordered_vertexes) {
         if (vertex != 0) {
@@ -133,7 +108,7 @@ std::vector<int> GetMaxIndependentSetWithRandom(const Graph& graph, std::vector<
             }
         }
     }
-    candidate_vertices = std::move(Y);
+    candidate_vertices = Y;
     return S;
 }
 
@@ -148,14 +123,12 @@ int Degree(int v, const Container& candidates, const Graph& graph) {
     return degree;
 }
 
-
-
 struct VertexData {
     int degX;
     int degY;
 };
 
-/*std::vector<int> GetMaxIndependentSetRLF(const Graph& graph, std::vector<int>& candidate_vertices) {
+std::vector<int> GetMaxIndependentSetRLF(const Graph& graph, std::vector<int>& candidate_vertices) {
     std::unordered_set X(candidate_vertices.begin(), candidate_vertices.end());
     std::unordered_set<int> Y;
     std::unordered_map<int, VertexData> cache;
@@ -229,99 +202,6 @@ struct VertexData {
     }
 
     candidate_vertices = std::vector<int>(Y.begin(), Y.end());
-    return S;
-};*/
-
-
-
-std::vector<int> GetMaxIndependentSetRLF(const Graph& graph, std::vector<int>& candidate_vertices) {
-    const int n = graph.V() + 1;
-
-    std::vector<char> in_X(n, 0); // v in X ~  in_X[v] == 1 else in_X[v] == 0
-    std::vector<char> in_Y(n, 0);
-    std::vector<int> X_list; // X
-    X_list.reserve(candidate_vertices.size());
-    for (int v : candidate_vertices) {
-        in_X[v] = 1;
-        X_list.push_back(v);
-    }
-
-    std::vector<int> S; // color class
-    S.reserve(candidate_vertices.size());
-
-    std::vector<int> Y_list; // Y
-    Y_list.reserve(candidate_vertices.size());
-
-    std::vector<VertexData> cache(n); // degree cache
-    for (int v : candidate_vertices) {
-        int deg = 0;
-        for (int u : graph.AdjacentVertices(v)) {
-            if (in_X[u]) deg++;
-        }
-        cache[v] = {deg, 0};
-    }
-
-    bool first_pick = true;
-
-    while (!X_list.empty()) {
-        // choose another vertex u
-        auto it = X_list.begin();
-        if (first_pick) {
-            first_pick = false;
-            // First pick is based on max deg in X
-            it = std::max_element(X_list.begin(), X_list.end(),
-                [&cache](const int a, const int b) {
-                    return cache[a].degX < cache[b].degX;
-                });
-        } else {
-            // Not first pick is based on max deg in Y, ties are split by min deg in X
-            it = std::max_element(X_list.begin(), X_list.end(),
-                [&cache](const int a, const int b) {
-                    if (cache[a].degY != cache[b].degY)
-                        return cache[a].degY < cache[b].degY;
-                    return cache[a].degX > cache[b].degX;
-                });
-        }
-
-        int u = *it;
-        S.push_back(u);
-
-        // X = X/{u}
-        in_X[u] = 0;
-        X_list.erase(it);
-
-        // all adjacent vertices of X move to Y
-        for (int w : graph.AdjacentVertices(u)) {
-            if (in_X[w]) {
-                in_X[w] = 0;
-                in_Y[w] = 1;
-                Y_list.push_back(w);
-            }
-        }
-
-        std::vector<int> new_X_list;
-        new_X_list.reserve(X_list.size());
-        for (int v : X_list) {
-            if (in_X[v]) {
-                new_X_list.push_back(v);
-                int degY = 0;
-                for (int w : graph.AdjacentVertices(v)) {
-                    if (in_Y[w]) degY++;
-                }
-                cache[v].degY = degY;
-
-                int degX = 0;
-                for (int w : graph.AdjacentVertices(v)) {
-                    if (in_X[w]) degX++;
-                }
-                cache[v].degX = degX;
-            }
-        }
-        X_list = std::move(new_X_list);
-    }
-
-    candidate_vertices = std::move(Y_list);
-
     return S;
 }
 

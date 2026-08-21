@@ -40,20 +40,17 @@ int main(int argc, char* argv[]) {
 
     std::cout << "For file: " + filename << std::endl;
     int root = 1;
-    // int multiplier = 10;
-    std::cout << "Alg with root = " << root << std::endl;
-    auto bfs_coloring = algorithms::RLF(graph);
-    bfs_coloring.Represent();
-    assert(!HasConflicts(graph, bfs_coloring.color));
-    //assert(target == bfs_coloring.numColors);
-    std::cout << "Bounds:" << std::endl;
-    std::cout << "lower_bound_fraction: " << chrom_num_bounds::lower_bound_fraction(graph) << std::endl;
-    std::cout << "upper_bound_sqrt: " << chrom_num_bounds::upper_bound_sqrt(graph) << std::endl;
-    std::cout << "upper_bound_degree: " << chrom_num_bounds::upper_bound_degree(graph) << std::endl;
-    std::cout << "upper_bound_max_min: " << chrom_num_bounds::upper_bound_max_min(graph) << std::endl;
-
-    std::cout << std::endl;
-    root+=1;
+    int multiplier = 10;
+    while (root <= graph.V()) {
+        std::cout << "BFS with root = " << root << std::endl;
+        auto bfs_coloring = algorithms::GreedyBFS(graph, root);
+        bfs_coloring.Represent();
+        std::cout << "conflicts = " << bfs_coloring.conflicts << std::endl;
+        //assert(!HasConflicts(graph, bfs_coloring.color));
+        //assert(target == bfs_coloring.numColors);
+        std::cout << std::endl;
+        root*=multiplier;
+    }
 
     /*auto straight_coloring = algorithms::GreedyForward(graph);
     std::cout << "Straight: " << std::endl;
