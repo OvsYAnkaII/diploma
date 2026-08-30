@@ -1,4 +1,4 @@
-name: Sync Overleaf to GitHub (manual)
+name: From Overleaf to GitHub (manual)
 on:
   workflow_dispatch:
 
