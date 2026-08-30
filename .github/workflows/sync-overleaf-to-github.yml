@@ -1,0 +1,33 @@
+name: Sync Overleaf to GitHub (manual)
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub repository
+        uses: actions/checkout@v3
+
+      - name: Pull from Overleaf
+        env:
+          TOKEN: ${{ secrets.OVERLEAF_GIT_TOKEN }}
+          PROJECT_ID: ${{ secrets.OVERLEAF_PROJECT_ID }}
+        run: |
+          # Клонируем Overleaf
+          git clone --depth 1 https://git:$TOKEN@git.overleaf.com/$PROJECT_ID overleaf-repo
+
+          # Создаём папку для файлов Overleaf
+          mkdir -p overleaf-src
+
+          # Копируем всё из корня Overleaf (кроме .git) в папку overleaf-src
+          rsync -av --delete ./overleaf-repo/ ./overleaf-src/ --exclude .git
+
+          # Настраиваем Git
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Добавляем и коммитим
+          git add overleaf-src/
+          git commit -m "Sync from Overleaf to overleaf-src/" || echo "No changes"
+          git push origin main
